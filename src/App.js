@@ -6,20 +6,91 @@ const CryptoDivergenceScanner = () => {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [scanProgress, setScanProgress] = useState(0);
   const [alertCount, setAlertCount] = useState(0);
+  const [selectedChart, setSelectedChart] = useState('BTCUSDT');
   const [btcData, setBtcData] = useState({
     direction: 'bullish',
     rsi: 52,
     macd: 'bullish',
     price: 67500
   });
-  const [lastPriceUpdate, setLastPriceUpdate] = useState(null);
 
-  // Simple price fetcher - tries real API, falls back to smart demo
+  // TradingView Chart Component
+  const TradingViewChart = ({ symbol }) => {
+    useEffect(() => {
+      // Clear existing chart
+      const container = document.getElementById('tradingview-chart');
+      if (container) {
+        container.innerHTML = '';
+      }
+
+      // Load TradingView script
+      const script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/tv.js';
+      script.async = true;
+      script.onload = () => {
+        if (window.TradingView) {
+          new window.TradingView.widget({
+            width: '100%',
+            height: 500,
+            symbol: `BINANCE:${symbol}`,
+            interval: '5',
+            timezone: 'Etc/UTC',
+            theme: 'dark',
+            style: '1',
+            locale: 'en',
+            toolbar_bg: '#1f2937',
+            enable_publishing: false,
+            hide_top_toolbar: false,
+            hide_legend: false,
+            save_image: false,
+            container_id: 'tradingview-chart',
+            studies: [
+              'RSI@tv-basicstudies',
+              'MACD@tv-basicstudies',
+              'Volume@tv-basicstudies'
+            ]
+          });
+        }
+      };
+      document.body.appendChild(script);
+
+      return () => {
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      };
+    }, [symbol]);
+
+    return (
+      <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">Live Chart - {symbol}</h3>
+          <div className="flex gap-2">
+            {['BTCUSDT', 'ETHUSDT', 'BNBUSDT'].map(coin => (
+              <button
+                key={coin}
+                onClick={() => setSelectedChart(coin)}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                  selectedChart === coin 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {coin.replace('USDT', '')}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div id="tradingview-chart" className="w-full h-[500px] rounded-lg overflow-hidden"></div>
+      </div>
+    );
+  };
+
+  // Simple price fetcher
   const fetchCurrentPrices = async () => {
     try {
       console.log('🔄 Fetching current prices...');
       
-      // Try CoinGecko API (should work on Vercel!)
       const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,ripple,cardano&vs_currencies=usd&include_24hr_change=true');
       
       if (response.ok) {
@@ -62,7 +133,7 @@ const CryptoDivergenceScanner = () => {
       };
     });
 
-    // Update Bitcoin data with real price
+    // Update Bitcoin data
     const btcData = data.bitcoin;
     if (btcData) {
       setBtcData({
@@ -75,11 +146,10 @@ const CryptoDivergenceScanner = () => {
       });
     }
 
-    setLastPriceUpdate(new Date());
     return results;
   };
 
-  // Smart demo data that changes each time
+  // Smart demo data
   const generateSmartDemoData = () => {
     const now = new Date();
     const seed = Math.floor(now.getTime() / (5 * 60 * 1000));
@@ -139,7 +209,7 @@ const CryptoDivergenceScanner = () => {
     };
   };
 
-  // Generate opportunities with analysis
+  // Generate opportunities
   const generateOpportunities = (marketData) => {
     return marketData.map((coin, index) => {
       const confidence = 70 + Math.floor(Math.random() * 25);
@@ -189,7 +259,7 @@ const CryptoDivergenceScanner = () => {
     }
   };
 
-  // Copy trade details for Vermatrader
+  // Copy trade details
   const copyTradeDetails = async (opp) => {
     const riskData = calculateRiskReward(opp.price, opp.divergenceType, opp.confidence);
     
@@ -247,20 +317,15 @@ Generated: ${new Date().toLocaleString()}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">
-              📈 Live Crypto Scanner
+              📈 Live Crypto Scanner with Charts
             </h1>
             <p className="text-gray-400 mt-2 text-lg">
-              Real crypto prices → Copy signals to Vermatrader
+              Real crypto prices + TradingView charts → Copy signals to Vermatrader
             </p>
             <div className="flex items-center gap-4 mt-2 text-sm">
               <div className="flex items-center gap-1 text-green-400">
-                <span>✅ Vercel Deployed</span>
+                <span>✅ Live Charts Active</span>
               </div>
-              {lastPriceUpdate && (
-                <div className="flex items-center gap-1 text-blue-400">
-                  <span>Updated: {lastPriceUpdate.toLocaleTimeString()}</span>
-                </div>
-              )}
               {alertCount > 0 && (
                 <div className="flex items-center gap-1 text-yellow-400">
                   <span>{alertCount} signals copied</span>
@@ -279,6 +344,11 @@ Generated: ${new Date().toLocaleString()}
           >
             {isRunning ? '⏸️ Stop Scanner' : '▶️ Start Scanner'}
           </button>
+        </div>
+
+        {/* TradingView Chart */}
+        <div className="mb-6">
+          <TradingViewChart symbol={selectedChart} />
         </div>
 
         {/* Bitcoin Status */}
@@ -323,7 +393,7 @@ Generated: ${new Date().toLocaleString()}
             <div className="text-center py-12 text-gray-400">
               <div className="text-6xl mb-4">📊</div>
               <p className="text-xl">Click "Start Scanner" to find trading signals</p>
-              <p className="text-sm mt-2">Real prices on Vercel! 🚀</p>
+              <p className="text-sm mt-2">Now with live TradingView charts! 🚀</p>
             </div>
           )}
 
@@ -345,6 +415,12 @@ Generated: ${new Date().toLocaleString()}
                         {opp.isRealPrice && (
                           <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">REAL PRICE</span>
                         )}
+                        <button 
+                          onClick={() => setSelectedChart(opp.symbol + 'USDT')}
+                          className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded hover:bg-blue-500/30 transition-colors"
+                        >
+                          View Chart
+                        </button>
                       </div>
                     </div>
                   </div>
