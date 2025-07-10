@@ -136,11 +136,11 @@ Generated: ${new Date().toLocaleString()}
   };
 
   // Main scan function
-  const runScan = async () => {
-    if (!isRunning) return;
-    await fetchFearGreed();
-    setOpportunities(generateOpportunities());
-  };
+const runScan = async () => {
+  if (!isRunning) return;
+  await fetchFearGreed();
+  setOpportunities(generateOpportunities());
+};
 
   useEffect(() => {
     fetchFearGreed();
