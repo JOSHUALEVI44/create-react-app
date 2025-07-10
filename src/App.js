@@ -1,4 +1,13 @@
-{/* Bitget Perpetual Chart */}
+<div className="mt-2 text-sm text-gray-400">
+             📊 Bitget Perpetual Futures Data • 🔄 Live Updates • RSI: {btcData.rsi}
+           </div>
+         </div>
+
+         {/* Fear & Greed Indicator */}
+         <FearGreedIndicator />
+       </div>
+
+       {/* Bitget Perpetual Chart */}
        <div className="mb-6">
          <BitgetPerpetualChart symbol={selectedChart} />
        </div>
@@ -7,7 +16,7 @@
        {scanProgress > 0 && (
          <div className="bg-gray-900 rounded-lg p-4 border border-gray-700 mb-6">
            <div className="flex justify-between items-center mb-2">
-             <span>Analyzing Bitget Perpetual Futures + Fear & Greed...</span>
+             <span>Analyzing Bitget Perpetual Futures + Fear & Greed + Smart Money Concepts...</span>
              <span>{scanProgress}%</span>
            </div>
            <div className="w-full bg-gray-700 rounded-full h-3">
@@ -43,7 +52,7 @@
                    </div>
                    <div>
                      <div className="text-xl font-semibold">{opp.symbol}/USDT</div>
-                     <div className="text-gray-400 flex items-center gap-2">
+                     <div className="text-gray-400 flex items-center gap-2 flex-wrap">
                        ${parseFloat(opp.price).toFixed(4)}
                        {opp.isRealPrice && (
                          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">REAL PRICE</span>
@@ -188,8 +197,12 @@
                    </div>
                  </div>
 
-                 <div className="text-xs text-gray-400 bg-gray-700 rounded p-2">
+                 <div className="text-xs text-gray-400 bg-gray-700 rounded p-2 mb-3">
                    <strong>Entry Reason:</strong> {entry.entryReason}
+                 </div>
+
+                 <div className="text-xs text-gray-400">
+                   Risk: ${entry.riskAmount} | Reward: ${entry.rewardAmount} | RSI: {opp.rsi} | Timeframe: {opp.timeframe}
                  </div>
                </div>
 
