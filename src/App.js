@@ -138,8 +138,12 @@ Generated: ${new Date().toLocaleString()}
   // Main scan function
 const runScan = async () => {
   if (!isRunning) return;
+  
+  console.log('🔄 Starting scan...');
   await fetchFearGreed();
-  setOpportunities(generateOpportunities());
+  const newOpportunities = generateOpportunities();
+  console.log('✅ Found opportunities:', newOpportunities.length);
+  setOpportunities(newOpportunities);
 };
 
   useEffect(() => {
